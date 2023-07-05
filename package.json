@@ -45,49 +45,6 @@
         ]
       }
     ],
-    "debuggers": [
-      {
-        "type": "cobol",
-        "languages": [
-          "cobol"
-        ],
-        "program": "gdb",
-        "args": [
-          "--init-eval-command=\"source /usr/local/bin/cobcd.py\""
-        ],
-        "configurationAttributes": {
-          "launch": {
-            "type": "cobol",
-            "required": [
-              "program"
-            ],
-            "properties": {
-              "program": {
-                "type": "string",
-                "default": "${workspaceFolder}/a.out"
-              }
-            }
-          }
-        },
-        "configurationSnippets": [
-          {
-            "label": "Debug COBOL",
-            "description": "New COBOL debugging configuration",
-            "body": {
-              "type": "cobol",
-              "request": "launch",
-              "name": "${2:Launch Program}",
-              "program": "${workspaceFolder}/${1:Program}"
-            }
-          }
-        ]
-      }
-    ],
-    "breakpoints": [
-      {
-        "language": "COBOL"
-      }
-    ],
     "configuration": {
       "title": "Superbol COBOL",
       "properties": {
@@ -131,7 +88,7 @@
         }
     ]
   },
-  "main": "./dist/superbol_vscode_extension.bc.js",
+  "main": "./dist/superbol_vscode_platform.bc.js",
   "scripts": {
     "compile": "make compile",
     "package": "vsce package --out superbol-vscode-platform.vsix --yarn",

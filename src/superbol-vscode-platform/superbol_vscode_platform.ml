@@ -169,14 +169,6 @@ let activate (extension : Vscode.ExtensionContext.t) =
   in
   Vscode.ExtensionContext.subscribe extension ~disposable;
 
-  let debug =
-    Vscode.Debug.registerDebugConfigurationProvider ()
-      ~debugType:"cobol"
-      ~provider:Debugger.debugConfigurationProvider
-  in
-
-  Vscode.ExtensionContext.subscribe extension ~disposable:debug;
-
   let task =
     Vscode.Tasks.registerTaskProvider
       ~type_:Superbol_tasks.type_
