@@ -83,3 +83,13 @@ let%expect_test "numeric-pic-for-bin-usage" =
         }
       }
     } |}];;
+
+let%expect_test "pic-with-space-in-parens" =
+  dotest @@ prog "pic-with-space-in-parens"
+  ~working_storage:{|
+            77 DB-REALM-NAME    PIC X( 30 ) IS EXTERNAL.
+            77 DB-RECORD-NAME   PIC X( 30 ) IS EXTERNAL.
+            77 DB-SET-NAME      PIC X( 30 ) IS EXTERNAL.
+            77 DB-KEY-NAME      PIC X( 30 ) IS EXTERNAL.
+  |};
+[%expect {||}]

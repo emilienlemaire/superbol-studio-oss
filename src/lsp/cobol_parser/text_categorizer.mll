@@ -26,6 +26,8 @@ type pic_output =
   | PIC_end
   | PIC_unexpected of char
 
+let pic_buf = Buffer.create 32
+
 type alphanum_suffix = STR | EBCDIC
 type alphanum_content =
   | AStr of string * alphanum_suffix
@@ -35,7 +37,7 @@ type alphanum_content =
 }
 
 let blank = [' ' '\009' '\r' ]
-let blanks = (blank+ | '\t')
+let blanks = (blank | '\t')+
 let digit = [ '0'-'9' ]
 let sign = [ '+' '-' ]
 let opers = sign | ['*' '/' '>' '<' '=' '&'] | "**" | "::" | ">=" | "<=" | "<>"
@@ -49,8 +51,9 @@ let firstidentchar = [ 'a'-'z' 'A'-'Z' '0'-'9' ]
 let lastidentchar = firstidentchar
 let ident = (firstidentchar (identchar* lastidentchar)?)
 
-let picchar   = _ # [' ' '\t' '\009' '\n' '\r' '\'' '"' ';']
+let picchar   = _ # [' ' '\t' '\009' '\n' '\r' '\'' '"' ';' '(' ')']
 let picstring = (picchar # [',']) (picchar*)
+
 
 (* Text-word tokenizer (after text manipulation phase) *)
 rule token = parse
@@ -91,11 +94,45 @@ and pic_token = parse
   | ['i' 'I'] ['s' 'S']
       { PIC_is }
 
+  | ((picstring '(') as s)
+      { Buffer.add_string pic_buf s;
+        pic_string 1 lexbuf }
+
   | (picstring as s)
       { PIC_string s }
 
   | eof
       { PIC_end }
+
+  | (_ as c)
+      { PIC_unexpected c }
+
+and pic_string n = parse
+
+  | blanks
+      { if n = 0 then
+          let s = Buffer.contents pic_buf in
+          Buffer.clear pic_buf;
+          PIC_string s
+        else
+          pic_string n lexbuf }
+
+  | (picchar+) as s
+      { Buffer.add_string pic_buf s;
+        pic_string n lexbuf }
+
+  | ')'
+      { Buffer.add_char pic_buf ')';
+        pic_string (n - 1) lexbuf }
+
+  | '('
+      { Buffer.add_char pic_buf '(';
+        pic_string (n + 1) lexbuf }
+
+  | eof
+      { let s = Buffer.contents pic_buf in
+        Buffer.clear pic_buf;
+        PIC_string s }
 
   | (_ as c)
       { PIC_unexpected c }
