@@ -54,7 +54,7 @@ module Process = struct
 
     val pid : int [@@js.global "process.pid"]
 
-    val kill : int -> ?signal:string -> unit -> unit [@@js.call "process.kill"]]
+    val kill : int -> ?signal:string -> unit -> unit [@@js.global "process.kill"]]
 
   module Env = struct
     include [%js: val env : Ojs.t [@@js.global "process.env"]]
@@ -281,7 +281,9 @@ module ChildProcess = struct
 
     val kill : t -> ?signal:string -> unit -> unit [@@js.call]
 
-    val on : t -> string -> Ojs.t -> unit [@@js.call]]
+    val on : t -> string -> Ojs.t -> unit [@@js.call]
+
+    val unref : t -> t [@@js.get]]
 
   let spawn_process = spawn
 

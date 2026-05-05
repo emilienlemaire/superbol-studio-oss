@@ -253,6 +253,8 @@ module ChildProcess : sig
        ]
     -> unit
 
+  val unref : t -> t
+
   (** High-level API that waits for process to complete *)
 
   val exec :
