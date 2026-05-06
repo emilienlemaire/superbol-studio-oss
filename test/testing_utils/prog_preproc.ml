@@ -11,21 +11,42 @@
 (*                                                                        *)
 (**************************************************************************)
 
+open EzCompat
 open Cobol_common.Srcloc.INFIX
 
-let platform ~verbose =
-  { Prog_common.platform with verbosity = if verbose then 1 else 0 }
-
 let options
-    ?(verbose = false) ?(source_format = Cobol_config.(SF SFFixed))
+    ?(verbose = false) 
+    ?(source_format = Cobol_config.(SF SFFixed))
+    ?(copybooks = [])
     () =
-  { (Cobol_preproc.Options.default ~platform:(platform ~verbose)) with
-    source_format }
+  let platform = 
+      { Prog_common.platform with verbosity = if verbose then 1 else 0 }
+  in
+  let platform = if copybooks = [] then platform else
+      let copy_map = StringMap.of_list copybooks in
+      { platform with 
+        read_file = (fun file ->
+            match StringMap.find_opt file copy_map with
+            | Some contents -> contents
+            | None -> platform.read_file file);
+        find_lib = (fun ~lookup_config ?fromfile ?libname textname -> 
+            match textname with
+            | `Alphanum w
+            | `Word w ->
+                if StringMap.mem w copy_map then
+                  Ok w
+                else
+                  platform.find_lib ~lookup_config ?fromfile ?libname textname
+        );
+    }
+  in
+  { (Cobol_preproc.Options.default ~platform)
+    with source_format }
 
-let preprocess ?verbose ?(filename = "prog.cob") ?source_format contents =
+let preprocess ?verbose ?(filename = "prog.cob") ?source_format ?copybooks contents =
   Cobol_preproc.Outputs.show_n_forget ~ppf:Fmt.stdout @@
   Cobol_preproc.preprocess_input
-    ~options:(options ?verbose ?source_format ()) @@
+    ~options:(options ?verbose ?source_format ?copybooks ()) @@
   Cobol_preproc.Input.string ~filename contents
 
 let show_text ?verbose ?(filename = "prog.cob") ?source_format contents =
