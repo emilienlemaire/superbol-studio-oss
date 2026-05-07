@@ -50,7 +50,7 @@ let pp_cobol_unit ?(show_items = false) =
          (Fmt.(list ~sep:nop) Cobol_data.Printer.pp_record));
     C'(show_items,
        Pretty.vfield "items" (fun x -> x.unit_data.data_items.named)
-         (Unit_qualmap.pp_qualmap Cobol_data.Printer.pp_data_definition));
+         (Unit_resolver_map.pp Cobol_data.Printer.pp_data_definition));
   ]
 
 let pp_cobol_unit' ppf u = pp_cobol_unit ppf ~&u

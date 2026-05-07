@@ -538,7 +538,7 @@ let proc_at_pos ~filename (pos: Lsp.Types.Position.t) group : procedure_at_posit
     method! fold_procedure_paragraph { paragraph_name; _ } { cu; _ } =
       let proc_name = match cu, paragraph_name with
         | Some cu, Some qn ->
-          Some (Cobol_unit.Qualmap.find_binding
+          Some (Cobol_unit.Resolver_map.find_binding
                   ~&qn cu.unit_procedure.procedure_blocks.named).full_qn
         | _ -> None
       in

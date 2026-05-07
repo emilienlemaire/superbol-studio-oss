@@ -229,7 +229,7 @@ let focus_on_name_in_defintions = true
 let find_data_definition Lsp_position.{ location_of; location_of_srcloc }
     ?(allow_notifications = true)
     (qn: Cobol_ptree.qualname) (cu: Cobol_unit.Types.cobol_unit) =
-  match Cobol_unit.Qualmap.find qn cu.unit_data.data_items.named with
+  match Cobol_unit.Resolver_map.find qn cu.unit_data.data_items.named with
   | Data_field { def = { loc; _ }; _ }
   | Data_renaming { def = { loc; _ }; _ }
   | Data_condition { def = { loc; _ }; _ }
@@ -245,7 +245,7 @@ let find_data_definition Lsp_position.{ location_of; location_of_srcloc }
   | Table_index { qualname; _ } ->
       [location_of qualname]
   | exception Not_found
-  | exception Cobol_unit.Qualmap.Ambiguous _
+  | exception Cobol_unit.Resolver_map.Ambiguous _
     when not allow_notifications ->
       []
   | exception Not_found ->
@@ -253,7 +253,7 @@ let find_data_definition Lsp_position.{ location_of; location_of_srcloc }
          analyzed. *)
       (* Lsp_notify.unknown "data-name" qn; *)
       []
-  | exception Cobol_unit.Qualmap.Ambiguous (lazy matching_qualnames) ->
+  | exception Cobol_unit.Resolver_map.Ambiguous (lazy matching_qualnames) ->
       Lsp_notify.ambiguous "data-name" qn ~matching_qualnames;
       []
 
@@ -274,13 +274,13 @@ let find_proc_definition
   | Section p ->
       [location_of p]
   | exception Not_found
-  | exception Cobol_unit.Qualmap.Ambiguous _
+  | exception Cobol_unit.Resolver_map.Ambiguous _
     when not allow_notifications ->
       []
   | exception Not_found ->
       Lsp_notify.unknown "procedure-name" qn;
       []
-  | exception Cobol_unit.Qualmap.Ambiguous (lazy matching_qualnames) ->
+  | exception Cobol_unit.Resolver_map.Ambiguous (lazy matching_qualnames) ->
       Lsp_notify.ambiguous "procedure-name" qn ~matching_qualnames;
       []
 
@@ -325,13 +325,13 @@ let lookup_qn ~kind ~lookup qn =
   | Not_found ->
       Lsp_notify.unknown kind qn;
       None
-  | Cobol_unit.Qualmap.Ambiguous (lazy matching_qualnames) ->
+  | Cobol_unit.Resolver_map.Ambiguous (lazy matching_qualnames) ->
       Lsp_notify.ambiguous kind qn ~matching_qualnames;
       None
 
 let find_full_qn ~kind qn qmap =
   lookup_qn ~kind qn
-    ~lookup:(fun qn -> (Cobol_unit.Qualmap.find_binding qn qmap).full_qn)
+    ~lookup:(fun qn -> (Cobol_unit.Resolver_map.find_binding qn qmap).full_qn)
 
 let find_proc_qn ~kind qn ?in_section cu =
   lookup_qn ~kind qn
@@ -581,14 +581,14 @@ let lookup_data_definition cu_name element_at_pos group =
   let named_data_defs = cu.unit_data.data_items.named in
   try match element_at_pos with
     | Data_item { full_qn = Some qn; def_loc } ->
-        Cobol_unit.Qualmap.find qn named_data_defs,
+        Cobol_unit.Resolver_map.find qn named_data_defs,
         def_loc
     | Data_full_name qn | Data_name qn ->
-        Cobol_unit.Qualmap.find qn named_data_defs,
+        Cobol_unit.Resolver_map.find qn named_data_defs,
         Lsp_lookup.baseloc_of_qualname qn
     | Data_item _ | Proc_name _ ->
         raise Not_found
-  with Cobol_unit.Qualmap.Ambiguous _ -> raise Not_found
+  with Cobol_unit.Resolver_map.Ambiguous _ -> raise Not_found
 
 let describe_data_definition_at_pos
     ?(always_show_hover_definition_text_in_data_div = false)

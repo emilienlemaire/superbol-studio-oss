@@ -19,7 +19,7 @@ open Cobol_common.Srcloc.TYPES
 open Cobol_common.Srcloc.INFIX
 
 module Visitor = Cobol_common.Visitor
-module Qualmap = Cobol_unit.Qualmap
+module Resolver_map = Cobol_unit.Resolver_map
 module LIST = Cobol_common.Basics.LIST
 module NEL = Cobol_common.Basics.NEL
 module PIC = Cobol_data.Picture
@@ -39,7 +39,7 @@ type acc =
     current_storage: Cobol_data.Types.data_storage;
     current_qualification: Cobol_ptree.qualname option;
     item_stack: item_stack;
-    current_qualmap: Cobol_data.Types.field_definition with_loc Qualmap.t;
+    current_resolver_map: Cobol_data.Types.field_definition with_loc Resolver_map.t;
     pending_conditions: condition_name_under_construction list;
     filler_count: int;
     definitions: Cobol_unit.Types.data_definitions;
@@ -83,13 +83,13 @@ let init (config: unit_config) =
   {
     current_storage = Local_storage;                         (* dummy default *)
     current_qualification = None;
-    current_qualmap = Qualmap.empty;
+    current_resolver_map = Resolver_map.empty;
     item_stack = [];
     pending_conditions = [];
     filler_count = 0;
     definitions =
       {
-        data_items = { named = Qualmap.empty; list = [] };
+        data_items = { named = Resolver_map.empty; list = [] };
         data_records = [];
       };
     references = Cobol_unit.Qual.MAP.empty;
@@ -202,7 +202,7 @@ let commit_record acc ~renamings (record_item: item_definition with_loc) =
   let record = { record_name; record_storage = acc.current_storage;
                  record_item; record_renamings = renamings } in
   let add_named_def qn def { named; list } =
-    { named = Qualmap.add ~&qn def named;
+    { named = Resolver_map.add ~&qn def named;
       list = def :: list }
   and add_anonymous_def def { named; list } =
     { named;
@@ -238,7 +238,7 @@ let commit_record acc ~renamings (record_item: item_definition with_loc) =
     end data_items acc.pending_conditions
   in
   { acc with
-    current_qualmap = Qualmap.empty;
+    current_resolver_map = Resolver_map.empty;
     pending_conditions = [];
     definitions = { data_items;
                     data_records = record :: acc.definitions.data_records } }
@@ -335,7 +335,7 @@ let register_field_def acc (def: field_definition with_loc) =
   match ~&def.field_qualname with
   | Some qn ->
       { acc with
-        current_qualmap = Qualmap.add ~&qn def acc.current_qualmap }
+        current_resolver_map = Resolver_map.add ~&qn def acc.current_resolver_map }
   | None -> acc
 
 
@@ -537,7 +537,7 @@ let register_ref ~from:{ loc; _ } ~to_:qualname_opt acc =
 
 let find_in_current_record qualname acc =
   try
-    let res = Qualmap.find ~&qualname acc.current_qualmap in
+    let res = Resolver_map.find ~&qualname acc.current_resolver_map in
     Ok (register_ref ~from:qualname ~to_:~&res.field_qualname acc, res)
   with Not_found ->
     Error (Typeck_data_diagnostics.Item_not_found { qualname })

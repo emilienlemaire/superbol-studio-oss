@@ -22,7 +22,7 @@ module NEL = Cobol_common.Basics.NEL
 
 module TYPES = struct
 
-  type 'a qualmap =
+  type 'a resolver_map =
     {
       map: 'a node StrMap.t;
       indirect_quals: StrSet.t;            (* indirect qualifiers used in map *)
@@ -31,7 +31,7 @@ module TYPES = struct
   and 'a node =
     | Exact of {
         binding: 'a binding option;
-        refined: 'a qualmap;
+        refined: 'a resolver_map;
       }
     | Cut of {
         binding: 'a binding;
@@ -49,7 +49,14 @@ module TYPES = struct
 end
 include TYPES
 
-type +'a t = 'a qualmap
+type +'a t = 'a resolver_map
+
+let () =
+  Printexc.register_printer (function
+      | Ambiguous (lazy qns) ->
+          Some (Pretty.to_string "Ambiguous reference found: %a"
+                  (NEL.pp Unit_qual.pp) qns)
+      | _ -> None)
 
 (* --- *)
 
@@ -84,12 +91,12 @@ let pp_binding pp_value ppf { value; full_qn; _ } =
     pp_qualname full_qn
     pp_value value
 
-let pp_qualmap pp_value ppf map =
+let pp pp_value ppf map =
   Pretty.list ~fopen:"{@;<1 2>" ~fsep:"@;<1 2>" ~fclose:"@;}" ~fempty:"{}"
     (pp_binding pp_value) ppf
     (bindings map)
 
-let pp_qualmap_struct pp_value ppf map =
+let pp_struct pp_value ppf map =
   let rec pp_map ppf { map; _ } =
     Pretty.list ~fopen:"{|@;<1 2>" ~fsep:"@;<1 2>" ~fclose:"@;|}" ~fempty:"{/}"
       (fun ppf (key, node) -> Pretty.print ppf "@[<hv 2>%S:@ %a@]" key pp_node node)
@@ -170,13 +177,13 @@ and find_all_bindings qn qmap : _ binding list =
 let find given_qn map =
   (find_binding given_qn map).value
 
-let empty: _ qualmap =
+let empty: _ resolver_map =
   {
     map = StrMap.empty;
     indirect_quals = StrSet.empty;
   }
 
-let add full_qn value (map: 'a qualmap) =
+let add full_qn value (map: 'a resolver_map) =
   let rec insert qn binding { map; indirect_quals } =
     let map =
       StrMap.update (name_of qn) begin fun prev_node ->

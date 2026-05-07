@@ -11,7 +11,7 @@
 (*                                                                        *)
 (**************************************************************************)
 
-open Cobol_unit.Qualmap
+open Cobol_unit.Resolver_map
 open Testing_helpers.Make (Cobol_parser.INTERNAL.Dummy.Tags)
 
 module NEL = Cobol_common.Basics.NEL
@@ -20,8 +20,8 @@ let of_list lst =
   List.fold_left (fun map (qn, value) -> add qn value map) empty lst
 
 let show_map map =
-  Pretty.out "@[<v>Map: %a@]@." (pp_qualmap Fmt.text) map;
-  Pretty.out "@[<v>Rep: %a@]@." (pp_qualmap_struct Fmt.text) map
+  Pretty.out "@[<v>Map: %a@]@." (pp Fmt.text) map;
+  Pretty.out "@[<v>Rep: %a@]@." (pp_struct Fmt.text) map
 
 let pp_qualname ppf qn =
   Pretty.print ppf "@[<h>%a@]" Cobol_ptree.pp_qualname qn
