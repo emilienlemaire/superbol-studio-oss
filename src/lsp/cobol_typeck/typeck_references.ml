@@ -17,7 +17,7 @@ open Cobol_unit.Types
 open Cobol_common.Srcloc.TYPES
 open Cobol_common.Srcloc.INFIX
 
-module Qualmap = Cobol_unit.Qualmap
+module Resolver_map = Cobol_unit.Resolver_map
 
 let empty_accumulator =
   {
@@ -33,7 +33,7 @@ let error acc err =
 let resolve_data_qualname ~data_definitions ?(strict = true)
     ({ loc; payload = qn } as qn') acc =
   try
-    let bnd = Qualmap.find_binding qn data_definitions.data_items.named in
+    let bnd = Resolver_map.find_binding qn data_definitions.data_items.named in
     Ok { resolved_name = qn'; resolved = bnd.value },
     { acc with
       refs = Typeck_outputs.register_data_qualref ~loc bnd.full_qn acc.refs }
@@ -42,7 +42,7 @@ let resolve_data_qualname ~data_definitions ?(strict = true)
       (* TODO: error acc @@ Undefined_data_item { qualname = qn' } *)
       Error (),
       acc
-  | Qualmap.Ambiguous (lazy matching_qualnames) ->
+  | Resolver_map.Ambiguous (lazy matching_qualnames) ->
       Error (),
       error acc @@ Ambiguous_data_name { given_qualname = qn &@ loc;
                                          matching_qualnames }

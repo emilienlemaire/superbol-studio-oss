@@ -30,8 +30,8 @@ let typeck_file { preproc_options; parser_options; _ } filename =
       let cu = cu'.payload in
       cu
       (* let x_info =
-           (* May raise Not_found | Cobol_unit.Qualmap.Ambiguous _ *)
-           Cobol_unit.Qualmap.find
+           (* May raise Not_found | Cobol_unit.Resolver_map.Ambiguous _ *)
+           Cobol_unit.Resolver_map.find
              (Cobol_unit.Qual.name ( Cobol_common.Srcloc.flagit "VBFLD" Cobol_common.Srcloc.dummy))
              cu.unit_data.data_items.named
          in

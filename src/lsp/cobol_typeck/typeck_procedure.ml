@@ -17,7 +17,7 @@ open Cobol_unit.Types
 open Cobol_common.Srcloc.TYPES
 open Cobol_common.Srcloc.INFIX
 
-module Qualmap = Cobol_unit.Qualmap
+module Resolver_map = Cobol_unit.Resolver_map
 module Visitor = Cobol_common.Visitor
 
 type output =
@@ -94,7 +94,7 @@ let procedure_of_compilation_unit ~data_definitions ~refs cu' =
   let open struct
     type acc =
       {
-        blocks: procedure_block Qualmap.t;
+        blocks: procedure_block Resolver_map.t;
         block_list: procedure_block list;
         current_section: section_under_construction with_loc option;
         args: Cobol_ptree.procedure_using_phrase with_loc option;
@@ -107,7 +107,7 @@ let procedure_of_compilation_unit ~data_definitions ~refs cu' =
 
     let init =
       {
-        blocks = Qualmap.empty;
+        blocks = Resolver_map.empty;
         block_list = [];
         current_section = None;
         args = None;
@@ -145,9 +145,9 @@ let procedure_of_compilation_unit ~data_definitions ~refs cu' =
           | None ->
               { paragraphs with list = paragraph :: list }
           | Some qn ->
-              { named = Qualmap.add ~&qn paragraph named;
+              { named = Resolver_map.add ~&qn paragraph named;
                 list = paragraph :: list }
-        end { named = Qualmap.empty; list = [] } suc.sec_paragraphs
+        end { named = Resolver_map.empty; list = [] } suc.sec_paragraphs
       in
       Section ({ section_name = suc.sec_name; section_paragraphs } &@ loc)
 
@@ -171,7 +171,7 @@ let procedure_of_compilation_unit ~data_definitions ~refs cu' =
       | Some ({ payload = { sec_name = qn; _ }; _ } as section) ->
           let section = section_block section in
           { acc with
-            blocks = Qualmap.add ~&qn section acc.blocks;
+            blocks = Resolver_map.add ~&qn section acc.blocks;
             block_list = section :: acc.block_list;
             current_section = None }
       | None ->
@@ -200,7 +200,7 @@ let procedure_of_compilation_unit ~data_definitions ~refs cu' =
             Some ({ ~&s with sec_paragraphs } &@ loc)
       in
       { acc with
-        blocks = Qualmap.add qn (paragraph_block p) acc.blocks;
+        blocks = Resolver_map.add qn (paragraph_block p) acc.blocks;
         block_list;
         current_section }
 
@@ -277,7 +277,7 @@ let collect_references
               refs = Typeck_outputs.register_procedure_ref ~loc block acc.refs }
         | exception Not_found ->
             error acc @@ Unknown_proc_name qn
-        | exception Qualmap.Ambiguous (lazy matching_qualnames) ->
+        | exception Resolver_map.Ambiguous (lazy matching_qualnames) ->
             error acc @@ Ambiguous_proc_name { given_qualname = qn;
                                                matching_qualnames }
       in

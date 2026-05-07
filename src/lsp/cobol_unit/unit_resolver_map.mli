@@ -13,7 +13,7 @@
 
 module TYPES: sig
 
-  type +'a qualmap
+  type +'a resolver_map
 
   type 'a binding =
     {
@@ -25,18 +25,18 @@ module TYPES: sig
 
 end
 include module type of TYPES
-  with type 'a qualmap = 'a TYPES.qualmap
+  with type 'a resolver_map = 'a TYPES.resolver_map
 
-type +'a t = 'a qualmap
+type +'a t = 'a resolver_map
 
-val pp_qualmap: 'a Pretty.printer -> 'a qualmap Pretty.printer
-val pp_qualmap_struct: 'a Pretty.printer -> 'a qualmap Pretty.printer
+val pp: 'a Pretty.printer -> 'a resolver_map Pretty.printer
+val pp_struct: 'a Pretty.printer -> 'a resolver_map Pretty.printer
 
-val empty: 'a qualmap
-val add: Cobol_ptree.qualname -> 'a -> 'a qualmap -> 'a qualmap
+val empty: 'a resolver_map
+val add: Cobol_ptree.qualname -> 'a -> 'a resolver_map -> 'a resolver_map
 
-val fold: f:('a binding -> 'b -> 'b) -> 'a qualmap -> 'b -> 'b
-val find: Cobol_ptree.qualname -> 'a qualmap -> 'a
+val fold: f:('a binding -> 'b -> 'b) -> 'a resolver_map -> 'b -> 'b
+val find: Cobol_ptree.qualname -> 'a resolver_map -> 'a
 
-val bindings: 'a qualmap -> 'a binding list
-val find_binding: Cobol_ptree.qualname -> 'a qualmap -> 'a binding
+val bindings: 'a resolver_map -> 'a binding list
+val find_binding: Cobol_ptree.qualname -> 'a resolver_map -> 'a binding
