@@ -11,11 +11,11 @@
 (*                                                                        *)
 (**************************************************************************)
 
-let preproc ?(filename = "prog.cob") ?source_format contents =
+let preproc ?source_format ?copybooks ?(filename = "prog.cob") contents =
   Cobol_common.Srcloc.TESTING.register_file_contents ~filename contents;
   Cobol_preproc.Input.string ~filename contents |>
   Cobol_preproc.preprocessor
-    ~options:(Prog_preproc.options ~verbose:false ?source_format ())
+    ~options:(Prog_preproc.options ~verbose:false ?source_format ?copybooks ())
 
 let options
     ?(verbose = false)
@@ -45,9 +45,9 @@ let show_diagnostics ?(parser_options = options ())
     ~platform:Prog_common.platform
 
 let parse ?(parser_options = options ())
-    ?source_format ?filename contents =
-  preproc ?source_format ?filename contents |>
+    ?source_format ?copybooks ?filename contents =
+  preproc ?source_format ?copybooks ?filename contents |>
   Cobol_parser.parse_simple ~options:parser_options
 
-let just_parse ?parser_options ?source_format ?filename contents =
-  ignore @@ parse ?parser_options ?source_format ?filename contents
+let just_parse ?parser_options ?source_format ?copybooks ?filename contents =
+  ignore @@ parse ?parser_options ?source_format ?copybooks ?filename contents
